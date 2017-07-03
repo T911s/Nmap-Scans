@@ -19,7 +19,7 @@
   firefox $folder/fast-scan-report_$ip.html
 
   printf "Kicking off UDP nmap for $ip...\n"
-  nmap -sU -v -Pn -oX $folder/udp-scan.xml $ip && xsltproc $folder/udp-scan.xml -o $folder/udp-scan-report_$ip.html
+  nmap -sU -vv -Pn --stats-every 3m --max-retries 2 -oX $folder/udp-scan.xml $ip && xsltproc $folder/udp-scan.xml -o $folder/udp-scan-report_$ip.html
   firefox $folder/udp-scan-report_$ip.html
 
   printf "Kicking off enum4linux for $ip..."
