@@ -1,0 +1,14 @@
+!/bin/bash
+
+printf "Nmap Fast Scan\n"
+printf "Please enter the folder location\n"
+
+printf "eg: /root/exam6/Nmap_Scans/Host_1/Results/\n"
+read folder
+
+printf "Enter IP: \n"
+read ip
+
+nmap -Pn -v -sV -T4 -oX $folder/Fastscan.xml $ip && xsltproc $folder/Fastscan.xml -o $folder/fastscan_report_$ip.html
+
+firefox $folder/fastscan_report_$ip.html
