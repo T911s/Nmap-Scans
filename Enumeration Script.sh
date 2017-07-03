@@ -1,18 +1,10 @@
 #!/bin/bash
 
-# Note: this script requires a pre-existing text file
-# '/root/iplist.txt)' with one IP address per line to scan.
-# You will also need 'seclists' installed here: /root/scripts/seclists
-# (find it at https://github.com/danielmiessler/SecLists)
-
 # Running this script in a production environment would be a bad idea -
 # it is very chatty and would likely get you in trouble. Don't use this
 # anywhere you don't have permission!
 
-# The output is individual text files sorted in folders by target IP located
-# in '/root/recon/'
-
-# Usage: ./initial-scan.sh
+# Usage: ./enumeration_script.sh
   printf "Enumeration Scan\n"
   printf "Please enter the folder location\n"
   printf "eg: /root/exam6/Nmap_Scans/Host_1/Results/\n"
