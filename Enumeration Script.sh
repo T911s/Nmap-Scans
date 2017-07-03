@@ -10,51 +10,28 @@
   printf "eg: /root/exam6/Nmap_Scans/Host_1/Results/\n"
   read folder
 
-
 # Kick off general tasks - some in background
   printf "Enter IP: "
   read ip
 
-  echo "Kicking off top ports nmap for $ip..."; \
-  nmap -v -sV -Pn -T4 --reason -v \
-    -oX $folder/fast-scan.xml $ip \
-    && xsltproc $folder/fast-scan.xml \
-    -o $folder/fast-scan-report_$ip.xml \
-  firefox $folder/fast-scan-report_$ip.xml & \ 
+  printf "Kicking off fast nmap scan for $ip...\n"
+  nmap -v -sV -Pn -T4 -oX $folder/fast-scan.xml $ip && xsltproc $folder/fast-scan.xml -o $folder/fast-scan-report_$ip.html
+  firefox $folder/fast-scan-report_$ip.html
 
-  printf "Sleeping 10 seconds...\n"; sleep 10; \
-  printf "Kicking off UDP nmap for $ip...\n"; \
-  nmap -sU -v -Pn $ip 
-   -oX $folder/udp-scan.xml $ip \
-   && xsltproc $folder/udp-scan.xml \
-   -o $folder/udp-scan-report_$ip.xml \
-   firefox $folder/udp-scan-report_$ip.xml & \
+  printf "Kicking off UDP nmap for $ip...\n"
+  nmap -sU -v -Pn -oX $folder/udp-scan.xml $ip && xsltproc $folder/udp-scan.xml -o $folder/udp-scan-report_$ip.html
+  firefox $folder/udp-scan-report_$ip.html
 
-  printf "Sleeping 10 seconds...\n"; sleep 10; \
-  printf "Kicking off enum4linux for $ip... in background"; \
-  nohup enum4linux -a $ip
-  >> $folder/$ip-enum4linux.txt & \
-  
-  echo "Sleeping 10 seconds..."; sleep 10; \
-  echo "Kicking off onesixtyone for $ip..."; \
-  nohup onesixtyone $ip 
-  >> $folder/$ip-onesixtyone.txt & \
+  printf "Kicking off enum4linux for $ip..."
+  enum4linux -a $ip >> $folder/enum4linux_$ip.txt
 
-  echo "Sleeping 10 seconds..."; sleep 10; \
-  echo "Kicking off Gobuster scripts in background for $ip..."; \
-  gobuster -u http://$ip \
-    -w /root/worldlists/common.txt \
-    -s '200,204,301,302,307,403,500' -e \
-    >> $folder/$ip-gobuster-common.txt & \
-  sleep 5; \
-  gobuster -u http://$ip \
-    -w /root/worldlists/cgis.txt \
-    -s '200,204,301,302,307,403,500' -e \
-    >> $folder/$ip-gobuster-cgis.txt & \
+  printf "Kicking off onesixtyone for $ip..."
+  onesixtyone $ip -o $folder/onesixtyone_$ip.txt
 
-  echo "Sleeping 10 seconds..."; sleep 10; \
-  echo "Kicking off nikto in background for $ip..."; \
-  nohup nikto -h $ip >> /root/recon/$ip/$ip-nikto.txt & \
+  printf "Kicking off Gobuster scripts $ip..."
+  gobuster -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e >> $folder/gobuster-common_$ip.txt
+  gobuster -u http://$ip -w /root/wordlists/big.txt -s '200,204,301,302,307,403,500' -e  >> $folder/gobuster-cgis_$ip.txt
 
-  echo "Sleeping 10 seconds..."; sleep 10; \
+  printf "Kicking off nikto for $ip..."
+  nikto -h $ip >> $folder/nikto_$ip.txt
 done
