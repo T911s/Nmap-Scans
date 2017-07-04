@@ -39,6 +39,10 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   -o /root/exam/nmap_scans/$ip/udp-scan-report.html
   firefox /root/exam/nmap_scans/$ip/udp-scan-report.html
 
+  # enum4linux is set for background process due to its time to complete over VPN
+  # thus allowing time to complete until the next ip address runs enum4linx
+  # as it runs the same PID, and stops processing any previous enum4linux scans
+  
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Enum4linux scan for $ip...${RESET}\n"
   printf "\n"
@@ -48,14 +52,15 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}onesixtyone scan for $ip...${RESET}\n"
   printf "\n"
-  nohup onesixtyone $ip &>/dev/null & \
-  -o /root/exam/nmap_scans/$ip/onesixtyone_results.txt
+  onesixtyone $ip \
+  >> /root/exam/nmap_scans/$ip/onesixtyone_results.txt
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Gobuster scripts $ip...${RESET}\n"
   printf "\n"
   printf "Starting gobuster script with common.txt wordlist"
-  nohup gobuster -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e &>/dev/null & \
+  printf "\n"
+  gobuster -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e \
   >> /root/exam/nmap_scans/$ip/gobuster-common_$ip.txt
 
 # Do I really need this? It's a longer scan than common.txt wordlist..
@@ -71,6 +76,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
 
   printf "\n"
   printf "++++++++++++++++++++"
-  printf "${GREEN}starting next host!${RESET}"
+  printf "${GREEN}Starting next host!${RESET}"
   printf "++++++++++++++++++++"
+  printf "\n"
 done
