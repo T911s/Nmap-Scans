@@ -42,18 +42,21 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Enum4linux scan for $ip...${RESET}\n"
   printf "\n"
-  nohup enum4linux -a $ip >> /root/exam/nmap_scans/$ip/enum4linux_results.txt
+  nohup enum4linux -a $ip &>/dev/null & \
+  >> /root/exam/nmap_scans/$ip/enum4linux_results.txt
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}onesixtyone scan for $ip...${RESET}\n"
   printf "\n"
-  nohup onesixtyone $ip -o /root/exam/nmap_scans/$ip/onesixtyone_results.txt
+  nohup onesixtyone $ip &>/dev/null & \
+  -o /root/exam/nmap_scans/$ip/onesixtyone_results.txt
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Gobuster scripts $ip...${RESET}\n"
   printf "\n"
   printf "Starting gobuster script with common.txt wordlist"
-  nohup gobuster -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e >> /root/exam/nmap_scans/$ip/gobuster-common_$ip.txt
+  nohup gobuster -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e &>/dev/null & \
+  >> /root/exam/nmap_scans/$ip/gobuster-common_$ip.txt
 
 # Do I really need this? It's a longer scan than common.txt wordlist..
 # printf 'Starting gobuster script with big.txt wordlist"
@@ -62,7 +65,8 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Nikto for $ip...${RESET}\n"
   printf "\n"
-  nohup nikto -h $ip -F html -output /root/exam/nmap_scans/$ip/nikto_$ip.html
+  nohup nikto -h $ip &>/dev/null & \
+  -F html -output /root/exam/nmap_scans/$ip/nikto_$ip.html
   firefox /root/exam/nmap_scans/$ip/nikto_$ip.html
 
   printf "\n"
