@@ -42,7 +42,9 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   # enum4linux is set for background process due to its time to complete over VPN
   # thus allowing time to complete until the next ip address runs enum4linx
   # as it runs the same PID, and stops processing any previous enum4linux scans
-  
+
+  #nohup is not currently working.. needs to be run without it until solution found.
+
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Enum4linux scan for $ip...${RESET}\n"
   printf "\n"
@@ -72,7 +74,9 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   nohup nikto -h $ip &>/dev/null & \
   -F html -output /root/exam/nmap_scans/$ip/nikto_$ip.html
-  firefox /root/exam/nmap_scans/$ip/nikto_$ip.html
+  
+  # cant output file unless it has completed and especially if run in background process
+  # firefox /root/exam/nmap_scans/$ip/nikto_$ip.html
 
   printf "\n"
   printf "++++++++++++++++++++"
