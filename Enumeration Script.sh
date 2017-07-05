@@ -29,8 +29,11 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Fast nmap scan for $ip...${RESET}\n"
   printf "\n"
-  nmap -v -sV -Pn -T4 -oX /root/exam/nmap_scans/$ip/fast-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/fast-scan.xml -o /root/exam/nmap_scans/$ip/fast-scan-report.html
+  nmap -v -sV -Pn -T4 -oX /root/exam/nmap_scans/$ip/fast-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/fast-scan.xml \
+  -o /root/exam/nmap_scans/$ip/fast-scan-report.html
   firefox /root/exam/nmap_scans/$ip/fast-scan-report.html
+
+  sleep 5;
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}UDP nmap scan for $ip...${RESET}\n"
@@ -38,17 +41,15 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   nmap -sU -vv -Pn --stats-every 3m --max-retries 2 -oX /root/exam/nmap_scans/$ip/udp-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/udp-scan.xml \
   -o /root/exam/nmap_scans/$ip/udp-scan-report.html
   firefox /root/exam/nmap_scans/$ip/udp-scan-report.html
+    sleep 5;
+done
 
-  # enum4linux is set for background process due to its time to complete over VPN
-  # thus allowing time to complete until the next ip address runs enum4linx
-  # as it runs the same PID, and stops processing any previous enum4linux scans
-
-  #nohup is not currently working.. needs to be run without it until solution found.
-
+for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Enum4linux scan for $ip...${RESET}\n"
+  printf "${RED}RID Cycling will not be run${RESET}\n"
   printf "\n"
-  nohup enum4linux -a $ip &>/dev/null & \
+  enum4linux -U -S -G -M -P -o -n $ip \
   >> /root/exam/nmap_scans/$ip/enum4linux_results.txt
 
   printf "\n"
@@ -56,6 +57,8 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   onesixtyone $ip \
   >> /root/exam/nmap_scans/$ip/onesixtyone_results.txt
+
+  sleep 5;
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Gobuster scripts $ip...${RESET}\n"
@@ -65,18 +68,15 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   gobuster -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e \
   >> /root/exam/nmap_scans/$ip/gobuster-common_$ip.txt
 
-# Do I really need this? It's a longer scan than common.txt wordlist..
-# printf 'Starting gobuster script with big.txt wordlist"
-# gobuster -u http://$ip -w /root/wordlists/big.txt -s "200,204,301,302,307,403,500' -e  >> /root/exam6/nmap_scans/$ip/gobuster-big_$ip.txt
-  
+  sleep 10;
+
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Nikto for $ip...${RESET}\n"
   printf "\n"
-  nohup nikto -h $ip &>/dev/null & \
-  -F html -output /root/exam/nmap_scans/$ip/nikto_$ip.html
-  
-  # cant output file unless it has completed and especially if run in background process
-  # firefox /root/exam/nmap_scans/$ip/nikto_$ip.html
+  nikto -h $ip \
+  -o /root/exam/nmap_scans/$ip/nikto_$ip.xml && xsltproc /root/exam/nmap_scans/$ip/nikto_$ip.xml \
+  -o /root/exam/nmap_scans/$ip/nikto_$ip.html
+  firefox /root/exam/nmap_scans/$ip/nikto_$ip.html
 
   printf "\n"
   printf "++++++++++++++++++++"
