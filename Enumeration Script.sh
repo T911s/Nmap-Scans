@@ -133,6 +133,7 @@ done
   printf "\n"
 
 # Run an Enum4linux, Onesixtyone, Gobuster, and Nikto Scan for all IP addresses in iplist.txt and output to txt file
+# Are there other scripts I can run?
 
 for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
@@ -163,7 +164,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Nikto for $ip...${RESET}\n"
   nikto -h $ip \
-  >> /root/exam/nmap_scans/$ip/nikto_$ip.txt
+  >> /root/exam/nmap_scans/$ip/nikto_scan.txt
   printf "Completed!\n"
   sleep 5;
 
