@@ -159,6 +159,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "Remember to check any subdirectories ;)\n"
   sleep 5;
 
+  # This needs to be fixed, not currently working..
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Nikto for $ip...${RESET}\n"
   nikto -h $ip \
@@ -179,7 +180,7 @@ done
 
   echo ""
   echo "********************************************************"
-  echo "  ${YELLOW}Now starting detailed TCP/UDP scan!${RESET}  "  
+  echo "  ${YELLOW}Now starting detailed TCP/UDP scans!${RESET}  "  
   echo "                  This may take a while...              "
   echo "********************************************************"
   echo ""
@@ -193,7 +194,6 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   nmap -v -sV -Pn -T3 --reason -p- -A -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
   -o /root/exam/nmap_scans/$ip/detailed-scan-report.html
   firefox /root/exam/nmap_scans/$ip/detailed-scan-report.html
-
   sleep 5;
 
   printf "\n"
@@ -202,7 +202,6 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   nmap -sU -vv -Pn -A --stats-every 3m --max-retries 2 -oX /root/exam/nmap_scans/$ip/detailed-udp-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-udp-scan.xml \
   -o /root/exam/nmap_scans/$ip/detailed-udp-scan-report.html
   firefox /root/exam/nmap_scans/$ip/detailed-udp-scan-report.html
-
   sleep 5;
 
   next_host
