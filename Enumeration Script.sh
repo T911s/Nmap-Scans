@@ -207,5 +207,5 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   next_host
 done
 
-printf "${RED}[+]{RESET} Scans completed\n"
-printf "${RED}[+]{RESET} Results saved to /root/exam/nmap_scans/'IP_ADDRESS'\n"
+printf "${RED}[+]${RESET} Scans completed\n"
+printf "${RED}[+]${RESET} Results saved to /root/exam/nmap_scans/'IP_ADDRESS'\n"
