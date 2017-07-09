@@ -1,9 +1,20 @@
 #!/bin/bash
 
+# Update 07/07/2017
+# included detailed scan, testing -A option on all ports
+# identified takes about an hour for scan until detailed scan and then it could take up to 30 minutes per host
+
+# Update: 08/07/2017
+# Removed -A on the detailed scan, will note the 'new' IPs found and run it on than ALL PORTS
+# this will decrease the the completion time of the script
+# Fixed nikto from: nikto -h #ip to, nikto -h http://$ip
+# need to script test time on 4 hosts
+
 # Running this script in a production environment would be a bad idea -
 # it is very chatty and would likely get you in trouble. Don't use this
 # anywhere you don't have permission!
 
+# You will need to mkdir -p /root/tools/snmp-check/ and have the file snmp-check.pl in the folder
 # This requires a file with IP addresses in the folder: /root/exam/nmap_scans/iplist.txt
 # sleep command was added to script as an error would occur between scans.
 # Usage: ./enumeration_script.sh
@@ -45,7 +56,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Fast nmap scan for $ip...${RESET}\n"
   printf "\n"
-  nmap -v -sV -Pn -T4 -O -oX /root/exam/nmap_scans/$ip/fast-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/fast-scan.xml \
+  nmap -v -sV -Pn -T4 -oX /root/exam/nmap_scans/$ip/fast-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/fast-scan.xml \
   -o /root/exam/nmap_scans/$ip/fast-scan-report.html
   firefox /root/exam/nmap_scans/$ip/fast-scan-report.html
   sleep 5;
@@ -66,26 +77,45 @@ done
   printf "\n"
 
 # Run a TCP NSE Scan for all IP addresses in iplist.txt and output to firefox
-
 for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap FTP NSE scan over port 21 for $ip...${RESET}\n"
   printf "\n"
-  nmap -sS -vv -Pn -p 21 -T3 --script=ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221 \
+  nmap -sS -vv -Pn -p 21 --script=ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221 \
   -oX /root/exam/nmap_scans/$ip/ftp_port21.xml $ip && xsltproc /root/exam/nmap_scans/$ip/ftp_port21.xml \
   -o /root/exam/nmap_scans/$ip/ftp_port21_report_$ip.html
   firefox /root/exam/nmap_scans/$ip/ftp_port21_report_$ip.html
   sleep 5;
 
-  # might skip this one... its a long scan time!
-  #printf "\n"
-  #printf "${RED}[+]${RESET} ${BLUE} Nmap HTTP NSE scan over port 80 for $ip...${RESET}\n"
-  #printf "\n"
-  #nmap -sS -vv -Pn -p 80 -T3 --script=http-apache-server-status,http-auth-finder,http-backup-finder,http-cakephp-version,http-comments-displayer,http-config-backup,http-default-accounts,http-enum,http-exif-spider,http-fileupload-exploiter,http-php-version,http-passwd,http-sql-injection,http-userdir-enum \
-  #-oX /root/exam/nmap_scans/$ip/http_port80.xml $ip && xsltproc /root/exam/nmap_scans/$ip/http_port80.xml \
-  #-o /root/exam/nmap_scans/$ip/http_port80_report.html
-  #firefox /root/exam/nmap_scans/$ip/http_port80_report.html
-  #sleep 5;
+  printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE} Nmap HTTP NSE scan over port 80 for $ip...${RESET}\n"
+  printf "\n"
+  nmap -sS -vv -Pn -p 80 --script=http-auth-finder,http-comments-displayer,http-config-backup,http-default-accounts,http-enum,http-exif-spider,http-fileupload-exploiter,http-php-version,http-sql-injection,http-userdir-enum \
+  -oX /root/exam/nmap_scans/$ip/http_port80.xml $ip && xsltproc /root/exam/nmap_scans/$ip/http_port80.xml \
+  -o /root/exam/nmap_scans/$ip/http_port80_report.html
+  firefox /root/exam/nmap_scans/$ip/http_port80_report.html
+  sleep 5;
+
+  printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE} Nmap HTTP Shellshock NSE scan over port 80 for $ip...${RESET}\n"
+  printf "This will check if the host is vulnerable over /cgi-bin/admin.cgi\n"
+  printf "\n"
+  # checks if any if cgi-bin is accessible
+  curl -i http://$ip/cgi-bin/
+  printf "\n"
+  #output to confirm if vulnable pages are accessible
+  curl -i http://$ip/cgi-bin/admin.cgi
+  printf "\n"
+  curl -i http://$ip/cgi-bin/test.cgi
+  printf "\n"
+  curl -i http://$ip/cgi-bin/status
+  printf "\n"
+  #confirm if admin.cgi is accessible and vulnerable
+  nmap -vv -p80 --script=http-shellshock --script-args uri=/cgi-bin/admin.cgi \
+  -oX /root/exam/nmap_scans/$ip/http_shellshock80.xml $ip && xsltproc /root/exam/nmap_scans/$ip/http_shellshock80.xml \
+  -o /root/exam/nmap_scans/$ip/http_shellshock80_report.html
+  firefox /root/exam/nmap_scans/$ip/http_shellshock80_report.html
+  sleep 5;
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap SMB NSE scan over port 139 and 445 for $ip...${RESET}\n"
@@ -152,6 +182,13 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 5;
 
   printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE}snmp-check scan for $ip over UDP 161${RESET}\n"
+  perl /root/tools/snmp-check/snmp-check.pl -t $ip -c public \
+  >> /root/exam/nmap_scans/$ip/snmp-check_results.txt
+  printf "Completed!\n"
+  sleep 5;
+
+  printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Gobuster scripts $ip...${RESET}\n"
   printf "Starting gobuster script with common.txt wordlist against http://$ip/\n"
   gobuster -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e \
@@ -160,19 +197,12 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "Remember to check any subdirectories ;)\n"
   sleep 5;
 
-  # This needs to be fixed, not currently working..
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Nikto for $ip...${RESET}\n"
-  nikto -h $ip \
-  >> /root/exam/nmap_scans/$ip/nikto_scan.txt
+  nikto -h http://$ip -Format html -output /root/exam/nmap_scans/$ip/nikto_scan.html
+  firefox /root/exam/nmap_scans/$ip/nikto_scan.html
   printf "Completed!\n"
   sleep 5;
-
-  # this is testing for nikto output to html (needs testing)
-
-  #-o /root/exam/nmap_scans/$ip/nikto_$ip.xml && xsltproc /root/exam/nmap_scans/$ip/nikto_$ip.xml \
-  #-o /root/exam/nmap_scans/$ip/nikto_$ip.html
-  #firefox /root/exam/nmap_scans/$ip/nikto_$ip.html
 
   next_host
 done
@@ -180,33 +210,32 @@ done
 # Run a TCP and UDP Scan for all IP addresses on all ports in iplist.txt and output to firefox
 
   echo ""
-  echo "********************************************************"
-  echo "  ${YELLOW}Now starting detailed TCP/UDP scans!${RESET}  "  
-  echo "                  This may take a while...              "
-  echo "********************************************************"
+  echo "                                **********************************************************"
+  echo "                                |          Now starting detailed TCP scan !              |"  
+  echo "                                |                  This may take a while...              |"
+  echo "                                **********************************************************"
   echo ""
 
 for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   mkdir -p /root/exam/nmap_scans/$ip/
 
+  #might need to remove -A on all ports, 30 minutes per scan is just too long..
+
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Detailed TCP nmap scan for $ip...${RESET}\n"
   printf "\n"
-  nmap -v -sV -Pn -T3 --reason -p- -A -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
+  nmap -vv -sV -Pn --reason -p- -T3 -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
   -o /root/exam/nmap_scans/$ip/detailed-scan-report.html
   firefox /root/exam/nmap_scans/$ip/detailed-scan-report.html
-  sleep 5;
-
-  printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}Detailed UDP nmap scan for $ip...${RESET}\n"
-  printf "\n"
-  nmap -sU -vv -Pn -A --stats-every 3m --max-retries 2 -oX /root/exam/nmap_scans/$ip/detailed-udp-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-udp-scan.xml \
-  -o /root/exam/nmap_scans/$ip/detailed-udp-scan-report.html
-  firefox /root/exam/nmap_scans/$ip/detailed-udp-scan-report.html
   sleep 5;
 
   next_host
 done
 
 printf "${RED}[+]${RESET} Scans completed\n"
+printf "Make sure you run nmap -A on newly discovered hosts\n"
 printf "${RED}[+]${RESET} Results saved to /root/exam/nmap_scans/'IP_ADDRESS'\n"
+printf "${RED}[+]${RESET} Now starting Burp Suite for Active Spidering/Web Applications\n"
+burpsuite
+
+#add perl /root/tools/snmp-check/snmp-check.pl -t 192.168.1.1 -c public
