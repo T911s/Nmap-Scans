@@ -85,7 +85,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Who owns the services running on $ip ? ${RESET}\n"
   printf "\n"
-  nmap -sV -sC $ip \
+  nmap -sV -vv -sC $ip \
   -oX /root/exam/nmap_scans/$ip/service_owners.xml $ip && xsltproc /root/exam/nmap_scans/$ip/service_owners.xml \
   -o /root/exam/nmap_scans/$ip/service_owners_report_$ip.html
   sleep 5;
@@ -255,7 +255,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
 done
 
 printf "${RED}[+]${RESET} Scans completed\n"
-printf "Make sure you run nmap -p (interesting_port/s) -A on newly discovered hosts\n"
+printf "${RED}[+]${RESET} Make sure you run nmap -p (interesting_port/s) -A on newly discovered hosts\n"
 printf "${RED}[+]${RESET} Results saved to /root/exam/nmap_scans/'IP_ADDRESS'\n"
 printf "${RED}[+]${RESET} Now starting Burp Suite for Active Spidering/Web Applications\n"
 burpsuite
