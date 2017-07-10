@@ -67,7 +67,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   -o /root/exam/nmap_scans/$ip/udp-scan-report.html
   sleep 5;
 
-  prinf "Nmap scan outputs: \n"
+  printf "Nmap scan outputs: \n"
     firefox /root/exam/nmap_scans/$ip/fast-scan-report.html
     firefox /root/exam/nmap_scans/$ip/udp-scan-report.html
   next_host
