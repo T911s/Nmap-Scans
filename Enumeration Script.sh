@@ -66,8 +66,12 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   nmap -sU -vv -Pn --stats-every 3m --max-retries 2 -oX /root/exam/nmap_scans/$ip/udp-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/udp-scan.xml \
   -o /root/exam/nmap_scans/$ip/udp-scan-report.html
-  firefox /root/exam/nmap_scans/$ip/udp-scan-report.html
-    sleep 5;
+  sleep 5;
+
+  prinf "Nmap scan outputs: \n"
+    firefox /root/exam/nmap_scans/$ip/fast-scan-report.html
+    firefox /root/exam/nmap_scans/$ip/udp-scan-report.html
+  next_host
 done
 
   printf "\n"
@@ -78,22 +82,29 @@ done
 
 # Run a TCP NSE Scan for all IP addresses in iplist.txt and output to firefox
 for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
+
+  printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE} Who owns the services running on $ip ? ${RESET}\n"
+  printf "\n"
+  nmap -sV -sC $ip \
+  -oX /root/exam/nmap_scans/$ip/service_owners.xml $ip && xsltproc /root/exam/nmap_scans/$ip/service_owners.xml \
+  -o /root/exam/nmap_scans/$ip/service_owners_report_$ip.html
+  sleep 5;
+
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap FTP NSE scan over port 21 for $ip...${RESET}\n"
   printf "\n"
   nmap -sS -vv -Pn -p 21 --script=ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221 \
   -oX /root/exam/nmap_scans/$ip/ftp_port21.xml $ip && xsltproc /root/exam/nmap_scans/$ip/ftp_port21.xml \
   -o /root/exam/nmap_scans/$ip/ftp_port21_report_$ip.html
-  firefox /root/exam/nmap_scans/$ip/ftp_port21_report_$ip.html
   sleep 5;
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap HTTP NSE scan over port 80 for $ip...${RESET}\n"
   printf "\n"
-  nmap -sS -vv -Pn -p 80 --script=http-auth-finder,http-comments-displayer,http-config-backup,http-default-accounts,http-enum,http-exif-spider,http-fileupload-exploiter,http-php-version,http-sql-injection,http-userdir-enum \
+  nmap -sS -vv -Pn -p 80,8080,8000 --script=http-auth-finder,http-comments-displayer,http-config-backup,http-default-accounts,http-enum,http-exif-spider,http-fileupload-exploiter,http-php-version,http-sql-injection,http-userdir-enum \
   -oX /root/exam/nmap_scans/$ip/http_port80.xml $ip && xsltproc /root/exam/nmap_scans/$ip/http_port80.xml \
   -o /root/exam/nmap_scans/$ip/http_port80_report.html
-  firefox /root/exam/nmap_scans/$ip/http_port80_report.html
   sleep 5;
 
   printf "\n"
@@ -111,10 +122,9 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   curl -i http://$ip/cgi-bin/status
   printf "\n"
   #confirm if admin.cgi is accessible and vulnerable
-  nmap -vv -p80 --script=http-shellshock --script-args uri=/cgi-bin/admin.cgi \
+  nmap -vv -p 80,8080,8000 --script=http-shellshock --script-args uri=/cgi-bin/admin.cgi \
   -oX /root/exam/nmap_scans/$ip/http_shellshock80.xml $ip && xsltproc /root/exam/nmap_scans/$ip/http_shellshock80.xml \
   -o /root/exam/nmap_scans/$ip/http_shellshock80_report.html
-  firefox /root/exam/nmap_scans/$ip/http_shellshock80_report.html
   sleep 5;
 
   printf "\n"
@@ -123,7 +133,6 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   nmap -sS -Pn -vv -p 139,445 --script=smb-enum-domains,smb-os-discovery,smb-enum-shares,smb-enum-users,smb-enum-sessions,smb-enum-groups,smb-enum-processes,smb-server-stats,smb-system-info,smbv2-enabled \
   -oX /root/exam/nmap_scans/$ip/smb_nse.xml $ip && xsltproc /root/exam/nmap_scans/$ip/smb_nse.xml \
   -o /root/exam/nmap_scans/$ip/smb_nse_report.html
-  firefox /root/exam/nmap_scans/$ip/smb_nse_report.html
   sleep 5;
 
   printf "\n"
@@ -132,7 +141,6 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   nmap -sS -vv -p 139,445 --script-args=unsafe=1 --script=smb-vuln-conficker,smb-vuln-cve2009-3103,smb-vuln-ms06-025,smb-vuln-ms07-029,smb-vuln-ms08-067,smb-vuln-ms10-054,smb-vuln-ms10-061,smb-vuln-regsvc-dos \
   -oX /root/exam/nmap_scans/$ip/smb_nse_vuln.xml $ip && xsltproc /root/exam/nmap_scans/$ip/smb_nse_vuln.xml \
   -o /root/exam/nmap_scans/$ip/smb_nse_vuln_report.html
-  firefox /root/exam/nmap_scans/$ip/smb_nse_vuln_report.html
   sleep 5;
 
   printf "\n"
@@ -141,7 +149,6 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   nmap -sS -vv -p 161 --script=snmp-info,snmp-netstat,snmp-processes,snmp-sysdescr,snmp-win32-services,snmp-win32-shares,snmp-win32-software,snmp-win32-users \
   -oX /root/exam/nmap_scans/$ip/snmp_nse.xml $ip && xsltproc /root/exam/nmap_scans/$ip/snmp_nse.xml \
   -o /root/exam/nmap_scans/$ip/snmp_nse_report.html
-  firefox /root/exam/nmap_scans/$ip/snmp_nse_report.html
   sleep 5;
 
   printf "\n"
@@ -150,8 +157,17 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   nmap -sS -vv -p 1433,3306 --script=ms-sql-info,mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122 \
   -oX /root/exam/nmap_scans/$ip/mysql_nse.xml $ip && xsltproc /root/exam/nmap_scans/$ip/mysql_nse.xml \
   -o /root/exam/nmap_scans/$ip/mysql_nse_report.html
-  firefox /root/exam/nmap_scans/$ip/mysql_nse_report.html
   sleep 5;
+
+    printf "Now to output all NSE scans for $ip to firefox!\n"
+    firefox /root/exam/nmap_scans/$ip/service_owners_report_$ip.html
+    firefox /root/exam/nmap_scans/$ip/ftp_port21_report_$ip.html
+    firefox /root/exam/nmap_scans/$ip/http_port80_report.html
+    firefox /root/exam/nmap_scans/$ip/http_shellshock80_report.html
+    firefox /root/exam/nmap_scans/$ip/smb_nse_report.html
+    firefox /root/exam/nmap_scans/$ip/smb_nse_vuln_report.html
+    firefox /root/exam/nmap_scans/$ip/snmp_nse_report.html
+    firefox /root/exam/nmap_scans/$ip/mysql_nse_report.html
   
   next_host
 done  
@@ -187,6 +203,13 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   >> /root/exam/nmap_scans/$ip/snmp-check_results.txt
   printf "Completed!\n"
   sleep 5;
+
+  printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE}smtp-user-enum scan for $ip...${RESET}\n"
+  smtp-user-enum -M VRFY -U /root/wordlists/names.txt -t $ip \
+  >> /root/exam/nmap_scans/$ip/smtp-users_results.txt
+  printf "Completed!\n"
+  sleep 5;  
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Gobuster scripts $ip...${RESET}\n"
@@ -233,9 +256,10 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
 done
 
 printf "${RED}[+]${RESET} Scans completed\n"
-printf "Make sure you run nmap -A on newly discovered hosts\n"
+printf "Make sure you run nmap -p (interesting_port/s) -A on newly discovered hosts\n"
 printf "${RED}[+]${RESET} Results saved to /root/exam/nmap_scans/'IP_ADDRESS'\n"
 printf "${RED}[+]${RESET} Now starting Burp Suite for Active Spidering/Web Applications\n"
 burpsuite
 
-#add perl /root/tools/snmp-check/snmp-check.pl -t 192.168.1.1 -c public
+
+
