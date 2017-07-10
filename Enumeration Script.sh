@@ -58,14 +58,12 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   nmap -v -sV -Pn -T4 -oX /root/exam/nmap_scans/$ip/fast-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/fast-scan.xml \
   -o /root/exam/nmap_scans/$ip/fast-scan-report.html
-  firefox /root/exam/nmap_scans/$ip/fast-scan-report.html
   sleep 5;
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}UDP nmap scan for $ip...${RESET}\n"
   printf "\n"
   nmap -sU -vv -Pn --stats-every 3m --max-retries 2 -oX /root/exam/nmap_scans/$ip/udp-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/udp-scan.xml \
-  -o /root/exam/nmap_scans/$ip/udp-scan-report.html
   sleep 5;
 
   prinf "Nmap scan outputs: \n"
