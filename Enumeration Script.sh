@@ -283,5 +283,5 @@ printf "${RED}[+]${RESET} Now starting Burp Suite for Active Spidering/Web Appli
 burpsuite
 printf "for more port information, follow: 0daySecurity Enumeration\n"
 printf "Remember to fill out services enum excel spreadsheet\n"
-
+exit
 

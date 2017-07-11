@@ -13,10 +13,6 @@ read ip
   -oX /root/exam/nmap_scans/$ip/smb_nse_pwdump.xml $ip && xsltproc /root/exam/nmap_scans/$ip/smb_nse_pwdump.xml \
   -o /root/exam/nmap_scans/$ip/smb_nse_pwdump_report.html
 
-  firefox
-  sleep 2;
   firefox /root/exam/nmap_scans/$ip/smb_nse_pwdump_report.html
   sleep 5;
-  printf "\n"
-
 exit
