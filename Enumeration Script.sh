@@ -68,6 +68,9 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 5;
 
   printf "Nmap scan outputs: \n"
+    #starts firefox to prevent script bug error occuring
+    firefox
+    sleep 5;
     firefox /root/exam/nmap_scans/$ip/fast-scan-report.html
     firefox /root/exam/nmap_scans/$ip/udp-scan-report.html
   next_host
@@ -83,9 +86,9 @@ done
 for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
 
   printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE} Who owns the services running on $ip ? ${RESET}\n"
+  printf "${RED}[+]${RESET} ${BLUE} Who owns the services running on $ip ? if ident is running..${RESET}\n"
   printf "\n"
-  nmap -sV -vv -sC $ip \
+  nmap -sV -vv -sC -p 113 \
   -oX /root/exam/nmap_scans/$ip/service_owners.xml $ip && xsltproc /root/exam/nmap_scans/$ip/service_owners.xml \
   -o /root/exam/nmap_scans/$ip/service_owners_report_$ip.html
   sleep 5;
@@ -99,11 +102,27 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 5;
 
   printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE} Nmap SMTP NSE scan over port 25 for $ip...${RESET}\n"
+  printf "\n"
+  nmap -sS -vv -p 25 --script=smtp-commands,smtp-enum-users,smtp-open-relay,smtp-vuln-cve2010-4344,smtp-vuln-cve2011-1720,smtp-vuln-cve2011-1764 \
+  -oX /root/exam/nmap_scans/$ip/smtp_nse.xml $ip && xsltproc /root/exam/nmap_scans/$ip/smtp_nse.xml \
+  -o /root/exam/nmap_scans/$ip/smtp_nse_report.html
+  sleep 5;  
+
+  printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap HTTP NSE scan over port 80 for $ip...${RESET}\n"
   printf "\n"
-  nmap -sS -vv -Pn -p 80,8080,8000 --script=http-auth-finder,http-comments-displayer,http-config-backup,http-default-accounts,http-enum,http-exif-spider,http-fileupload-exploiter,http-php-version,http-sql-injection,http-userdir-enum \
+  nmap -sS -vv -Pn -p 80,8080,8000 --script=http-auth-finder,http-comments-displayer,http-config-backup,http-method-tamper,http-passwd,http-default-accounts,http-robots.txt,http-enum,http-exif-spider,http-fileupload-exploiter,http-php-version,http-sql-injection,http-userdir-enum \
   -oX /root/exam/nmap_scans/$ip/http_port80.xml $ip && xsltproc /root/exam/nmap_scans/$ip/http_port80.xml \
   -o /root/exam/nmap_scans/$ip/http_port80_report.html
+  sleep 5;
+
+  printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE} Nmap NFS NSE scan over port 111 for $ip...${RESET}\n"
+  printf "\n"
+  nmap -sS -vv -Pn -p 111 --script=nfs-ls,nfs-showmount,nfs-statfs \
+  -oX /root/exam/nmap_scans/$ip/nfs_port111.xml $ip && xsltproc /root/exam/nmap_scans/$ip/nfs_port111.xml \
+  -o /root/exam/nmap_scans/$ip/nfs_port111_report.html
   sleep 5;
 
   printf "\n"
@@ -162,8 +181,11 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
     firefox /root/exam/nmap_scans/$ip/service_owners_report_$ip.html
     firefox /root/exam/nmap_scans/$ip/ftp_port21_report_$ip.html
     firefox /root/exam/nmap_scans/$ip/http_port80_report.html
+    sleep 2;
+    firefox /root/exam/nmap_scans/$ip/nfs_port111_report.html
     firefox /root/exam/nmap_scans/$ip/http_shellshock80_report.html
     firefox /root/exam/nmap_scans/$ip/smb_nse_report.html
+    sleep 2;
     firefox /root/exam/nmap_scans/$ip/smb_nse_vuln_report.html
     firefox /root/exam/nmap_scans/$ip/snmp_nse_report.html
     firefox /root/exam/nmap_scans/$ip/mysql_nse_report.html
@@ -184,7 +206,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Enum4linux scan for $ip...${RESET}\n"
   printf "${RED}RID Cycling will not be run${RESET}\n"
-  enum4linux -U -S -G -M -P -o -n $ip \
+  enum4linux -v -U -S -G -M -P -o -n $ip \
   >> /root/exam/nmap_scans/$ip/enum4linux_results.txt
   printf "Completed!\n"
   sleep 5;
@@ -209,11 +231,11 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   >> /root/exam/nmap_scans/$ip/smtp-users_results.txt
   printf "Completed!\n"
   sleep 5;  
-
+  
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Gobuster scripts $ip...${RESET}\n"
   printf "Starting gobuster script with common.txt wordlist against http://$ip/\n"
-  gobuster -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e \
+  gobuster -v -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e \
   >> /root/exam/nmap_scans/$ip/gobuster-common_wordlist.txt
   printf "Completed!\n"
   printf "Remember to check any subdirectories ;)\n"
@@ -259,6 +281,7 @@ printf "${RED}[+]${RESET} Make sure you run nmap -p (interesting_port/s) -A on n
 printf "${RED}[+]${RESET} Results saved to /root/exam/nmap_scans/'IP_ADDRESS'\n"
 printf "${RED}[+]${RESET} Now starting Burp Suite for Active Spidering/Web Applications\n"
 burpsuite
-
+printf "for more port information, follow: 0daySecurity Enumeration\n"
+printf "Remember to fill out services enum excel spreadsheet\n"
 
 
