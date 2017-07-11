@@ -1,10 +1,10 @@
   #!/bin/bash
 
   # go to seclists to get the username and passwords ;)
-  
   printf "${RED}[+]${RESET} ${BLUE} Checking smb hashes with smb-brute NSE script over $ip...${RESET}\n"
   printf "Note: This may close the port\n"
-  printf "\n"
+  printf "Enter IP: \n"
+  read ip
 
     nmap -sS -vv -p 445 --script=smb-brute --script-args=userdb=usernames.txt,passdb=passwords.txt $ip \
       -oX /root/exam/nmap_scans/$ip/smb_nse_brute.xml $ip && xsltproc /root/exam/nmap_scans/$ip/smb_nse_brute.xml \
