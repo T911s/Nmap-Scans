@@ -86,14 +86,6 @@ done
 for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
 
   printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE} Who owns the services running on $ip ? if ident is running..${RESET}\n"
-  printf "\n"
-  nmap -sV -vv -sC -p 113 \
-  -oX /root/exam/nmap_scans/$ip/service_owners.xml $ip && xsltproc /root/exam/nmap_scans/$ip/service_owners.xml \
-  -o /root/exam/nmap_scans/$ip/service_owners_report_$ip.html
-  sleep 5;
-
-  printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap FTP NSE scan over port 21 for $ip...${RESET}\n"
   printf "\n"
   nmap -sS -vv -Pn -p 21 --script=ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221 \
@@ -101,12 +93,23 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   -o /root/exam/nmap_scans/$ip/ftp_port21_report_$ip.html
   sleep 5;
 
+# I havent added nmap nse script for port 22
+# This will usually just be for brute forcing the host
+
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap SMTP NSE scan over port 25 for $ip...${RESET}\n"
   printf "\n"
   nmap -sS -vv -p 25 --script=smtp-commands,smtp-enum-users,smtp-open-relay,smtp-vuln-cve2010-4344,smtp-vuln-cve2011-1720,smtp-vuln-cve2011-1764 \
   -oX /root/exam/nmap_scans/$ip/smtp_nse.xml $ip && xsltproc /root/exam/nmap_scans/$ip/smtp_nse.xml \
   -o /root/exam/nmap_scans/$ip/smtp_nse_report.html
+  sleep 5;
+
+  printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE} Nmap DNS NSE scan over port 53 for $ip..${RESET}\n"
+  printf "\n"
+  nmap -sV -vv -sC -p 53 --script=broadcast-dns-service-discovery \
+  -oX /root/exam/nmap_scans/$ip/dns_nse.xml $ip && xsltproc /root/exam/nmap_scans/$ip/dns_nse.xml \
+  -o /root/exam/nmap_scans/$ip/dns_nse_report_$ip.html
   sleep 5;  
 
   printf "\n"
@@ -116,6 +119,9 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   -oX /root/exam/nmap_scans/$ip/http_port80.xml $ip && xsltproc /root/exam/nmap_scans/$ip/http_port80.xml \
   -o /root/exam/nmap_scans/$ip/http_port80_report.html
   sleep 5;
+
+# not scanning for pop3 - this will be picked up with ident scan -sC
+# not running pop3-brute in this scan
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap NFS NSE scan over port 111 for $ip...${RESET}\n"
@@ -146,6 +152,14 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 5;
 
   printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE} Who owns the services running on $ip ? if ident is running..${RESET}\n"
+  printf "\n"
+  nmap -sV -vv -sC -p 113 \
+  -oX /root/exam/nmap_scans/$ip/service_owners.xml $ip && xsltproc /root/exam/nmap_scans/$ip/service_owners.xml \
+  -o /root/exam/nmap_scans/$ip/service_owners_report_$ip.html
+  sleep 5; 
+
+  printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap SMB NSE scan over port 139 and 445 for $ip...${RESET}\n"
   printf "\n"
   nmap -sS -Pn -vv -p 139,445 --script=smb-enum-domains,smb-os-discovery,smb-enum-shares,smb-enum-users,smb-enum-sessions,smb-enum-groups,smb-enum-processes,smb-server-stats,smb-system-info,smbv2-enabled \
@@ -170,6 +184,14 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 5;
 
   printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE} Nmap HTTPS NSE scan over port 443,10443 for $ip...${RESET}\n"
+  printf "\n"
+  nmap -sS -vv -p 443,10433 --script=ssl_heartbleed,ssl-poodle,ssl-dh-params \
+  -oX /root/exam/nmap_scans/$ip/https_nse.xml $ip && xsltproc /root/exam/nmap_scans/$ip/https_nse.xml \
+  -o /root/exam/nmap_scans/$ip/https_nse_report.html
+  sleep 5;  
+
+  printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap MySQL NSE scan over port 3306 for $ip...${RESET}\n"
   printf "\n"
   nmap -sS -vv -p 1433,3306 --script=ms-sql-info,mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122 \
@@ -180,16 +202,19 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
     printf "Now to output all NSE scans for $ip to firefox!\n"
     firefox /root/exam/nmap_scans/$ip/service_owners_report_$ip.html
     firefox /root/exam/nmap_scans/$ip/ftp_port21_report_$ip.html
-    firefox /root/exam/nmap_scans/$ip/http_port80_report.html
+    firefox /root/exam/nmap_scans/$ip/dns_nse_report_$ip.html
     sleep 2;
+    firefox /root/exam/nmap_scans/$ip/http_port80_report.html
     firefox /root/exam/nmap_scans/$ip/nfs_port111_report.html
     firefox /root/exam/nmap_scans/$ip/http_shellshock80_report.html
     firefox /root/exam/nmap_scans/$ip/smb_nse_report.html
     sleep 2;
     firefox /root/exam/nmap_scans/$ip/smb_nse_vuln_report.html
     firefox /root/exam/nmap_scans/$ip/snmp_nse_report.html
+    firefox /root/exam/nmap_scans/$ip/https_nse_report.html
     firefox /root/exam/nmap_scans/$ip/mysql_nse_report.html
-  
+    sleep 2;
+
   next_host
 done  
 
@@ -233,7 +258,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 5;  
   
   printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}Gobuster scripts $ip...${RESET}\n"
+  printf "${RED}[+]${RESET} ${BLUE}Gobuster scripts $ip... on port 80..${RESET}\n"
   printf "Starting gobuster script with common.txt wordlist against http://$ip/\n"
   gobuster -v -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e \
   >> /root/exam/nmap_scans/$ip/gobuster-common_wordlist.txt
@@ -242,11 +267,19 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 5;
 
   printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}Nikto for $ip...${RESET}\n"
-  nikto -h http://$ip -Format html -output /root/exam/nmap_scans/$ip/nikto_scan.html
+  printf "${RED}[+]${RESET} ${BLUE}Nikto for $ip... on port 80..${RESET}\n"
+  nikto -c all v -h http://$ip -Format html -output /root/exam/nmap_scans/$ip/nikto_scan.html
   firefox /root/exam/nmap_scans/$ip/nikto_scan.html
   printf "Completed!\n"
   sleep 5;
+
+  # confirm this works
+  printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE}Ident for $ip... on port 113..${RESET}\n"
+  perl ident-user-enum.pl $ip 22 53 111 113 512 513 514 515 \
+  >> /root/exam/nmap_scans/$ip/ident_scan.html
+  printf "Completed!\n"
+  sleep 5;  
 
   next_host
 done
@@ -284,4 +317,3 @@ burpsuite
 printf "for more port information, follow: 0daySecurity Enumeration\n"
 printf "Remember to fill out services enum excel spreadsheet\n"
 exit
-
