@@ -250,13 +250,6 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 5;
 
   printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}onesixtyone scan for $ip...${RESET}\n"
-  onesixtyone -c dict.txt $ip \
-  >> /root/exam/nmap_scans/$ip/onesixtyone_results.txt
-  printf "Completed!\n"
-  sleep 5;
-
-  printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}snmp-check scan for $ip over UDP 161${RESET}\n"
   perl /root/tools/snmp-check/snmp-check.pl -t $ip -c public \
   >> /root/exam/nmap_scans/$ip/snmp-check_results.txt
