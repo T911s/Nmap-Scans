@@ -309,10 +309,16 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   nmap -vv -sV -Pn --reason --version-all -p- -T3 -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
   -o /root/exam/nmap_scans/$ip/detailed-scan-report.html
+  printf "\n"
   printf "Now running searchsploit over results\n"
-  printf "Please advise this is not 100% and manual testings are preferred, due to nmap outputs\n"
+  printf "Please advise this is not 100 percent and manual testings are preferred, due to nmap output\n"
+  printf "\n"
+  # printf "View results with #cat searchsploit-results.xml\n"
   sleep 2;
   searchsploit -v --nmap /root/exam/nmap_scans/$ip/detailed-scan.xml >> /root/exam/nmap_scans/$ip/searchsploit-results.xml
+  printf "\n"
+  cat /root/exam/nmap_scans/$ip/searchsploit-results.xml
+  printf "\n"
   firefox /root/exam/nmap_scans/$ip/detailed-scan-report.html
   sleep 5;
 
@@ -322,8 +328,8 @@ done
 printf "${RED}[+]${RESET} Scans completed\n"
 printf "${RED}[+]${RESET} Make sure you run nmap -p (interesting_port/s) -A on newly discovered hosts\n"
 printf "${RED}[+]${RESET} Results saved to /root/exam/nmap_scans/'IP_ADDRESS'\n"
+printf "${RED}[+]${RESET}For more port information, follow: 0daySecurity Enumeration\n"
+printf "${RED}[+]${RESET}Remember to fill out services enum excel spreadsheet\n"
 printf "${RED}[+]${RESET} Now starting Burp Suite for Active Spidering/Web Applications\n"
 burpsuite
-printf "for more port information, follow: 0daySecurity Enumeration\n"
-printf "Remember to fill out services enum excel spreadsheet\n"
 exit
