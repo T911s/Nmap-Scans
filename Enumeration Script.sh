@@ -69,7 +69,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
 
   printf "Nmap scan outputs: \n"
     #starts firefox to prevent script bug error occuring
-    firefox
+    /usr/bin/firefox &
     sleep 5;
     firefox /root/exam/nmap_scans/$ip/fast-scan-report.html
     firefox /root/exam/nmap_scans/$ip/udp-scan-report.html
@@ -186,7 +186,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap HTTPS NSE scan over port 443,10443 for $ip...${RESET}\n"
   printf "\n"
-  nmap -sS -vv -p 443,10433 --script=ssl_heartbleed,ssl-poodle,ssl-dh-params \
+  nmap -sS -vv -p 443,10433 --script-args vulns.showall --script=ssl-heartbleed,ssl-poodle,ssl-dh-params \
   -oX /root/exam/nmap_scans/$ip/https_nse.xml $ip && xsltproc /root/exam/nmap_scans/$ip/https_nse.xml \
   -o /root/exam/nmap_scans/$ip/https_nse_report.html
   sleep 5;  
@@ -228,6 +228,14 @@ done
 # Are there other scripts I can run?
 
 for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
+
+  printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE}onesixtyone scan for $ip...${RESET}\n"
+  onesixtyone -c dict.txt $ip \
+  >> /root/exam/nmap_scans/$ip/onesixtyone_results.txt
+  printf "Completed!\n"
+  sleep 5;
+
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Enum4linux scan for $ip...${RESET}\n"
   printf "${RED}RID Cycling will not be run${RESET}\n"
@@ -276,7 +284,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   # confirm this works
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Ident for $ip... on port 113..${RESET}\n"
-  perl ident-user-enum.pl $ip 22 53 111 113 512 513 514 515 \
+  ident-user-enum $ip 22 53 111 113 512 513 514 515 \
   >> /root/exam/nmap_scans/$ip/ident_scan.html
   printf "Completed!\n"
   sleep 5;  
@@ -301,7 +309,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Detailed TCP nmap scan for $ip...${RESET}\n"
   printf "\n"
-  nmap -vv -sV -Pn --reason -p- -T3 -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
+  nmap -vv -sV -Pn --reason --version-all -p- -T3 -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
   -o /root/exam/nmap_scans/$ip/detailed-scan-report.html
   firefox /root/exam/nmap_scans/$ip/detailed-scan-report.html
   sleep 5;
@@ -317,3 +325,5 @@ burpsuite
 printf "for more port information, follow: 0daySecurity Enumeration\n"
 printf "Remember to fill out services enum excel spreadsheet\n"
 exit
+
+#maybe ill add searchsploit -w --nmap "nameoffile.xml"
