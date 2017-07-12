@@ -10,6 +10,11 @@
 # Fixed nikto from: nikto -h #ip to, nikto -h http://$ip
 # need to script test time on 4 hosts
 
+# Update: 13/07/2017
+# Found the means to add searchsploit to the script.
+# It scans the xml file and delivers feedback on results from tcp scans.
+# Not 100% accurate, especially if no service information is found!
+
 # Running this script in a production environment would be a bad idea -
 # it is very chatty and would likely get you in trouble. Don't use this
 # anywhere you don't have permission!
@@ -295,10 +300,10 @@ done
 # Run a TCP and UDP Scan for all IP addresses on all ports in iplist.txt and output to firefox
 
   echo ""
-  echo "                                **********************************************************"
-  echo "                                |          Now starting detailed TCP scan !              |"  
-  echo "                                |                  This may take a while...              |"
-  echo "                                **********************************************************"
+  echo "                                *******************************************************************"
+  echo "                                |          Now starting detailed TCP & searchsploit scan!         |"  
+  echo "                                |                    This may take a while...                     |"
+  echo "                                *******************************************************************"
   echo ""
 
 for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
@@ -311,6 +316,10 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   nmap -vv -sV -Pn --reason --version-all -p- -T3 -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
   -o /root/exam/nmap_scans/$ip/detailed-scan-report.html
+  printf "Now running searchsploit over results\n"
+  printf "Please advise this is not 100% and manual testings are preferred, due to nmap outputs\n"
+  sleep 2;
+  searchsploit -v --nmap /root/exam/nmap_scans/$ip/detailed-scan.xml >> /root/exam/nmap_scans/$ip/searchsploit-results.xml
   firefox /root/exam/nmap_scans/$ip/detailed-scan-report.html
   sleep 5;
 
@@ -325,5 +334,3 @@ burpsuite
 printf "for more port information, follow: 0daySecurity Enumeration\n"
 printf "Remember to fill out services enum excel spreadsheet\n"
 exit
-
-#maybe ill add searchsploit -w --nmap "nameoffile.xml"
