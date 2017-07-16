@@ -24,6 +24,10 @@
 # sleep command was added to script as an error would occur between scans.
 # Usage: ./enumeration_script.sh
 
+# Update 16/07/2017
+# removed the multi tool scan, since it take far too long
+# and made a multi-tool scanner script.
+
 
   # Colours
   ESC="\e["
@@ -33,11 +37,11 @@
   BLUE=$ESC"34m"
   YELLOW=$ESC"33m"
 
-function enumeraton_scan {
+function enumeration_scan {
   echo ""
   echo "               w----------------------------------------------------------------w"
   echo "               |                                                                |"
-  echo "               |                        Enumeration Scan                        |"
+  echo "               |                   Nmap Enumeration Scan                        |"
   echo "               |                                                         -t911  |"
   echo "               w----------------------------------------------------------------w"
   echo ""
@@ -51,7 +55,7 @@ function next_host {
   printf "\n"
 }
 
-  enumeraton_scan
+  enumeration_scan
 
 # Run a TCP and UDP Scan for all IP addresses in iplist.txt and output to firefox
 
@@ -61,7 +65,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Fast nmap scan for $ip...${RESET}\n"
   printf "\n"
-  nmap -v -sV -Pn -T4 -oX /root/exam/nmap_scans/$ip/fast-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/fast-scan.xml \
+  nmap -vv -sV -Pn -T4 -oX /root/exam/nmap_scans/$ip/fast-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/fast-scan.xml \
   -o /root/exam/nmap_scans/$ip/fast-scan-report.html
   sleep 5;
 
@@ -73,9 +77,14 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 5;
 
   printf "Nmap scan outputs: \n"
-    #starts firefox to prevent script bug error occuring
+  searchsploit -v --nmap /root/exam/nmap_scans/$ip/fast-scan.xml >> /root/exam/nmap_scans/$ip/fast_searchsploit-results.xml
+  printf "\n"
+  cat /root/exam/nmap_scans/$ip/fast_searchsploit-results.xml
+    
+  #starts firefox to prevent script bug error occuring
     /usr/bin/firefox &
     sleep 5;
+
     firefox /root/exam/nmap_scans/$ip/fast-scan-report.html
     firefox /root/exam/nmap_scans/$ip/udp-scan-report.html
   next_host
@@ -189,9 +198,9 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 5;
 
   printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE} Nmap HTTPS NSE scan over port 443,10443 for $ip...${RESET}\n"
+  printf "${RED}[+]${RESET} ${BLUE} Nmap HTTPS NSE scan over port 443 for $ip...${RESET}\n"
   printf "\n"
-  nmap -sS -vv -p 443,10433 --script-args vulns.showall --script=ssl-heartbleed,ssl-poodle,ssl-dh-params \
+  nmap -sS -vv -p 443 --script-args vulns.showall --script=ssl-heartbleed,ssl-poodle,ssl-dh-params \
   -oX /root/exam/nmap_scans/$ip/https_nse.xml $ip && xsltproc /root/exam/nmap_scans/$ip/https_nse.xml \
   -o /root/exam/nmap_scans/$ip/https_nse_report.html
   sleep 5;  
@@ -199,7 +208,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap MySQL NSE scan over port 3306 for $ip...${RESET}\n"
   printf "\n"
-  nmap -sS -vv -p 1433,3306 --script=ms-sql-info,mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122 \
+  nmap -sS -vv -p 445,1433,3306 --script=ms-sql-info,mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122 \
   -oX /root/exam/nmap_scans/$ip/mysql_nse.xml $ip && xsltproc /root/exam/nmap_scans/$ip/mysql_nse.xml \
   -o /root/exam/nmap_scans/$ip/mysql_nse_report.html
   sleep 5;
@@ -223,73 +232,6 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   next_host
 done  
 
-  printf "\n"
-  printf "*************************************************"
-  printf "  ${YELLOW}Now starting multi-tool scan!${RESET} "  
-  printf "**************************************************"
-  printf "\n"
-
-# Run an Enum4linux, Onesixtyone, Gobuster, and Nikto Scan for all IP addresses in iplist.txt and output to txt file
-# Are there other scripts I can run?
-
-for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
-
-  printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}onesixtyone scan for $ip...${RESET}\n"
-  onesixtyone -c dict.txt $ip \
-  >> /root/exam/nmap_scans/$ip/onesixtyone_results.txt
-  printf "Completed!\n"
-  sleep 5;
-
-  printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}Enum4linux scan for $ip...${RESET}\n"
-  printf "${RED}RID Cycling will not be run${RESET}\n"
-  enum4linux -v -U -S -G -M -P -o -n $ip \
-  >> /root/exam/nmap_scans/$ip/enum4linux_results.txt
-  printf "Completed!\n"
-  sleep 5;
-
-  printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}snmp-check scan for $ip over UDP 161${RESET}\n"
-  perl /root/tools/snmp-check/snmp-check.pl -t $ip -c public \
-  >> /root/exam/nmap_scans/$ip/snmp-check_results.txt
-  printf "Completed!\n"
-  sleep 5;
-
-  printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}smtp-user-enum scan for $ip...${RESET}\n"
-  smtp-user-enum -M VRFY -U /root/wordlists/names.txt -t $ip \
-  >> /root/exam/nmap_scans/$ip/smtp-users_results.txt
-  printf "Completed!\n"
-  sleep 5;  
-  
-  printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}Gobuster scripts $ip... on port 80..${RESET}\n"
-  printf "Starting gobuster script with common.txt wordlist against http://$ip/\n"
-  gobuster -v -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e \
-  >> /root/exam/nmap_scans/$ip/gobuster-common_wordlist.txt
-  printf "Completed!\n"
-  printf "Remember to check any subdirectories ;)\n"
-  sleep 5;
-
-  printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}Nikto for $ip... on port 80..${RESET}\n"
-  nikto -c all v -h http://$ip -Format html -output /root/exam/nmap_scans/$ip/nikto_scan.html
-  firefox /root/exam/nmap_scans/$ip/nikto_scan.html
-  printf "Completed!\n"
-  sleep 5;
-
-  # confirm this works
-  printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}Ident for $ip... on port 113..${RESET}\n"
-  ident-user-enum $ip 22 53 111 113 512 513 514 515 \
-  >> /root/exam/nmap_scans/$ip/ident_scan.html
-  printf "Completed!\n"
-  sleep 5;  
-
-  next_host
-done
-
 # Run a TCP and UDP Scan for all IP addresses on all ports in iplist.txt and output to firefox
 
   echo ""
@@ -300,14 +242,11 @@ done
   echo ""
 
 for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
-  mkdir -p /root/exam/nmap_scans/$ip/
-
-  #might need to remove -A on all ports, 30 minutes per scan is just too long..
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Detailed TCP nmap scan for $ip...${RESET}\n"
   printf "\n"
-  nmap -vv -sV -Pn --reason --version-all -p- -T3 -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
+  nmap -vv -sV -Pn --reason --version-all -p- -A -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
   -o /root/exam/nmap_scans/$ip/detailed-scan-report.html
   printf "\n"
   printf "Now running searchsploit over results\n"
@@ -315,13 +254,12 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   # printf "View results with #cat searchsploit-results.xml\n"
   sleep 2;
-  searchsploit -v --nmap /root/exam/nmap_scans/$ip/detailed-scan.xml >> /root/exam/nmap_scans/$ip/searchsploit-results.xml
+  searchsploit -v --nmap /root/exam/nmap_scans/$ip/detailed-scan.xml >> /root/exam/nmap_scans/$ip/detailed_searchsploit-results.xml
   printf "\n"
-  cat /root/exam/nmap_scans/$ip/searchsploit-results.xml
+  cat /root/exam/nmap_scans/$ip/detailed_searchsploit-results.xml
   printf "\n"
   firefox /root/exam/nmap_scans/$ip/detailed-scan-report.html
   sleep 5;
-
   next_host
 done
 
