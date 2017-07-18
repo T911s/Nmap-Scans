@@ -57,15 +57,23 @@ function next_host {
 
   enumeration_scan
 
-# Run a TCP and UDP Scan for all IP addresses in iplist.txt and output to firefox
+# Run a fast TCP and a UDP Scan for IP addresses in iplist.txt and output to firefox
 
-for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
+  echo ""
+  echo "                *******************************************************************"
+  echo "                |                                                                 |"
+  echo "                |                Now starting a fast TCP/UDP scan!                |"  
+  echo "                |                                                                 |"
+  echo "                *******************************************************************"
+  echo ""
+
+  for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   mkdir -p /root/exam/nmap_scans/$ip/
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Fast nmap scan for $ip...${RESET}\n"
   printf "\n"
-  nmap -vv -sV -Pn -T4 -oX /root/exam/nmap_scans/$ip/fast-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/fast-scan.xml \
+  nmap -vv --open -Pn -oX /root/exam/nmap_scans/$ip/fast-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/fast-scan.xml \
   -o /root/exam/nmap_scans/$ip/fast-scan-report.html
   sleep 5;
 
@@ -76,27 +84,87 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   -o /root/exam/nmap_scans/$ip/udp-scan-report.html
   sleep 5;
 
-  printf "Nmap scan outputs: \n"
-  searchsploit -v --nmap /root/exam/nmap_scans/$ip/fast-scan.xml >> /root/exam/nmap_scans/$ip/fast_searchsploit-results.xml
-  printf "\n"
-  cat /root/exam/nmap_scans/$ip/fast_searchsploit-results.xml
-    
-  #starts firefox to prevent script bug error occuring
+#starts firefox to prevent script bug error occuring
     /usr/bin/firefox &
-    sleep 5;
-
     firefox /root/exam/nmap_scans/$ip/fast-scan-report.html
     firefox /root/exam/nmap_scans/$ip/udp-scan-report.html
+
+  next_host
+done  
+
+# do a nmap tcp all ports scan and run searchsploit on the results
+
+  echo ""
+  echo "                *******************************************************************"
+  echo "                |                                                                 |"
+  echo "                |               Now starting a TCP all ports scan!                |"  
+  echo "                |                                                                 |"
+  echo "                *******************************************************************"
+  echo ""
+
+for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
+
+  printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE}TCP all ports nmap scan for $ip...${RESET}\n"
+  printf "\n"
+  nmap -vv -sV -Pn -T4 -p- -oX /root/exam/nmap_scans/$ip/allports-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/allports-scan.xml \
+  -o /root/exam/nmap_scans/$ip/allports-scan-report.html
+  sleep 5;
+
+  printf "Nmap scan outputs: \n"
+  searchsploit -v --nmap /root/exam/nmap_scans/$ip/allports-scan.xml >> /root/exam/nmap_scans/$ip/allports_searchsploit-results.xml
+  printf "\n"
+  cat /root/exam/nmap_scans/$ip/allports_searchsploit-results.xml
+  
+  sleep 5;
+  firefox /root/exam/nmap_scans/$ip/allports-scan-report.html
+  
+  next_host
+done
+    
+# do a detailed nmap scan over all tcp ports
+
+  echo ""
+  echo "                 ************************************************************************"
+  echo "                 |                                                                       |"
+  echo "                 |               Now starting detailed all ports TCP scan!               |"  
+  echo "                 |                       This may take a while...                        |"
+  echo "                 |                                                                       |"
+  echo "                 ************************************************************************"
+  echo ""
+
+for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
+
+  printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE}Detailed TCP nmap scan for $ip...${RESET}\n"
+  printf "\n"
+  nmap -vv -sV -Pn --reason --version-all -p- -A -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
+  -o /root/exam/nmap_scans/$ip/detailed-scan-report.html
+  printf "\n"
+  printf "Now running searchsploit over results\n"
+  printf "Please advise this is not 100 percent and manual testings are preferred, due to nmap output\n"
+  printf "\n"
+  # printf "View results with #cat searchsploit-results.xml\n"
+  sleep 2;
+  searchsploit -v --nmap /root/exam/nmap_scans/$ip/detailed-scan.xml >> /root/exam/nmap_scans/$ip/detailed_searchsploit-results.xml
+  printf "\n"
+  cat /root/exam/nmap_scans/$ip/detailed_searchsploit-results.xml
+  printf "\n"
+  firefox /root/exam/nmap_scans/$ip/detailed-scan-report.html
+  sleep 5;
   next_host
 done
 
-  printf "\n"
-  printf "*************************************************"
-  printf "   ${GREEN}Now starting TCP NSE scan!${RESET}    "  
-  printf "*************************************************"
-  printf "\n"
+  echo ""
+  echo "                *****************************************************************"
+  echo "                |                                                               |"
+  echo "                |                Now starting the Nmap NSE scan!                |"  
+  echo "                |                                                               |"
+  echo "                *****************************************************************"
+  echo ""
 
-# Run a TCP NSE Scan for all IP addresses in iplist.txt and output to firefox
+# Run a NSE Scan for all IP addresses in iplist.txt and output to firefox
+
 for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
 
   printf "\n"
@@ -134,7 +202,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   -o /root/exam/nmap_scans/$ip/http_port80_report.html
   sleep 5;
 
-# not scanning for pop3 - this will be picked up with ident scan -sC
+# not scanning for pop3
 # not running pop3-brute in this scan
 
   printf "\n"
@@ -228,46 +296,11 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
     firefox /root/exam/nmap_scans/$ip/https_nse_report.html
     firefox /root/exam/nmap_scans/$ip/mysql_nse_report.html
     sleep 2;
-
-  next_host
-done  
-
-# Run a TCP and UDP Scan for all IP addresses on all ports in iplist.txt and output to firefox
-
-  echo ""
-  echo "                                *******************************************************************"
-  echo "                                |          Now starting detailed TCP & searchsploit scan!         |"  
-  echo "                                |                    This may take a while...                     |"
-  echo "                                *******************************************************************"
-  echo ""
-
-for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
-
-  printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}Detailed TCP nmap scan for $ip...${RESET}\n"
-  printf "\n"
-  nmap -vv -sV -Pn --reason --version-all -p- -A -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
-  -o /root/exam/nmap_scans/$ip/detailed-scan-report.html
-  printf "\n"
-  printf "Now running searchsploit over results\n"
-  printf "Please advise this is not 100 percent and manual testings are preferred, due to nmap output\n"
-  printf "\n"
-  # printf "View results with #cat searchsploit-results.xml\n"
-  sleep 2;
-  searchsploit -v --nmap /root/exam/nmap_scans/$ip/detailed-scan.xml >> /root/exam/nmap_scans/$ip/detailed_searchsploit-results.xml
-  printf "\n"
-  cat /root/exam/nmap_scans/$ip/detailed_searchsploit-results.xml
-  printf "\n"
-  firefox /root/exam/nmap_scans/$ip/detailed-scan-report.html
-  sleep 5;
-  next_host
 done
 
 printf "${RED}[+]${RESET} Scans completed\n"
-printf "${RED}[+]${RESET} Make sure you run nmap -p (interesting_port/s) -A on newly discovered hosts\n"
 printf "${RED}[+]${RESET} Results saved to /root/exam/nmap_scans/'IP_ADDRESS'\n"
-printf "${RED}[+]${RESET}For more port information, follow: 0daySecurity Enumeration\n"
-printf "${RED}[+]${RESET}Remember to fill out services enum excel spreadsheet\n"
+printf "${RED}[+]${RESET} For more port information, follow: 0daySecurity Enumeration\n"
 printf "${RED}[+]${RESET} Now starting Burp Suite for Active Spidering/Web Applications\n"
 burpsuite
 exit

@@ -42,7 +42,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   >> /root/exam/nmap_scans/$ip/samrdump_nocreds_results.txt
   printf "Completed!\n"
   sleep 5;
-S
+
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Enum4linux scan for $ip...${RESET}\n"
   printf "${RED}RID Cycling will not be run${RESET}\n"
