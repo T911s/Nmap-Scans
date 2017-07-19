@@ -1,33 +1,5 @@
 #!/bin/bash
-
-# Update 07/07/2017
-# included detailed scan, testing -A option on all ports
-# identified takes about an hour for scan until detailed scan and then it could take up to 30 minutes per host
-
-# Update: 08/07/2017
-# Removed -A on the detailed scan, will note the 'new' IPs found and run it on than ALL PORTS
-# this will decrease the the completion time of the script
-# Fixed nikto from: nikto -h #ip to, nikto -h http://$ip
-# need to script test time on 4 hosts
-
-# Update: 13/07/2017
-# Found the means to add searchsploit to the script.
-# It scans the xml file and delivers feedback on results from tcp scans.
-# Not 100% accurate, especially if no service information is found!
-
-# Running this script in a production environment would be a bad idea -
-# it is very chatty and would likely get you in trouble. Don't use this
-# anywhere you don't have permission!
-
-# You will need to mkdir -p /root/tools/snmp-check/ and have the file snmp-check.pl in the folder
-# This requires a file with IP addresses in the folder: /root/exam/nmap_scans/iplist.txt
-# sleep command was added to script as an error would occur between scans.
-# Usage: ./enumeration_script.sh
-
-# Update 16/07/2017
-# removed the multi tool scan, since it take far too long
-# and made a multi-tool scanner script.
-
+# requires list of addresses in /root/exam/nmap_scans/iplist.txt
 
   # Colours
   ESC="\e["
@@ -55,26 +27,26 @@ function next_host {
   printf "\n"
 }
 
-  enumeration_scan
+  enumeration_scan  
 
-# Run a fast TCP and a UDP Scan for IP addresses in iplist.txt and output to firefox
+# do a nmap tcp all ports scan and run searchsploit on the results
 
   echo ""
-  echo "                *******************************************************************"
-  echo "                |                                                                 |"
-  echo "                |                Now starting a fast TCP/UDP scan!                |"  
-  echo "                |                                                                 |"
-  echo "                *******************************************************************"
+  echo "                ***********************************************************************"
+  echo "                |                                                                     |"
+  echo "                |               Now starting a TCP all ports/UDP scan!                |"  
+  echo "                |                                                                     |"
+  echo "                ***********************************************************************"
   echo ""
 
-  for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
-  mkdir -p /root/exam/nmap_scans/$ip/
+for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
+mkdir -p /root/exam/nmap_scans/$ip/
 
   printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}Fast nmap scan for $ip...${RESET}\n"
+  printf "${RED}[+]${RESET} ${BLUE}TCP all ports nmap scan for $ip...${RESET}\n"
   printf "\n"
-  nmap -vv --open -Pn -oX /root/exam/nmap_scans/$ip/fast-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/fast-scan.xml \
-  -o /root/exam/nmap_scans/$ip/fast-scan-report.html
+  nmap -vv -sS -Pn -T4 -p- -oX /root/exam/nmap_scans/$ip/allports-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/allports-scan.xml \
+  -o /root/exam/nmap_scans/$ip/allports-scan-report.html
   sleep 5;
 
   printf "\n"
@@ -82,42 +54,11 @@ function next_host {
   printf "\n"
   nmap -sU -vv -Pn --stats-every 3m --max-retries 2 -oX /root/exam/nmap_scans/$ip/udp-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/udp-scan.xml \
   -o /root/exam/nmap_scans/$ip/udp-scan-report.html
-  sleep 5;
-
-#starts firefox to prevent script bug error occuring
-    /usr/bin/firefox &
-    firefox /root/exam/nmap_scans/$ip/fast-scan-report.html
-    firefox /root/exam/nmap_scans/$ip/udp-scan-report.html
-
-  next_host
-done  
-
-# do a nmap tcp all ports scan and run searchsploit on the results
-
-  echo ""
-  echo "                *******************************************************************"
-  echo "                |                                                                 |"
-  echo "                |               Now starting a TCP all ports scan!                |"  
-  echo "                |                                                                 |"
-  echo "                *******************************************************************"
-  echo ""
-
-for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
-
-  printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}TCP all ports nmap scan for $ip...${RESET}\n"
-  printf "\n"
-  nmap -vv -sV -Pn -T4 -p- -oX /root/exam/nmap_scans/$ip/allports-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/allports-scan.xml \
-  -o /root/exam/nmap_scans/$ip/allports-scan-report.html
-  sleep 5;
-
-  printf "Nmap scan outputs: \n"
-  searchsploit -v --nmap /root/exam/nmap_scans/$ip/allports-scan.xml >> /root/exam/nmap_scans/$ip/allports_searchsploit-results.xml
-  printf "\n"
-  cat /root/exam/nmap_scans/$ip/allports_searchsploit-results.xml
   
   sleep 5;
+  /usr/bin/firefox &
   firefox /root/exam/nmap_scans/$ip/allports-scan-report.html
+  firefox /root/exam/nmap_scans/$ip/udp-scan-report.html
   
   next_host
 done
@@ -138,7 +79,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Detailed TCP nmap scan for $ip...${RESET}\n"
   printf "\n"
-  nmap -vv -sV -Pn --reason --version-all -p- -A -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
+  nmap -vv -sV -sC -Pn --reason --version-all -T4 -p- -A -oX /root/exam/nmap_scans/$ip/detailed-scan.xml $ip && xsltproc /root/exam/nmap_scans/$ip/detailed-scan.xml \
   -o /root/exam/nmap_scans/$ip/detailed-scan-report.html
   printf "\n"
   printf "Now running searchsploit over results\n"
@@ -148,10 +89,9 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 2;
   searchsploit -v --nmap /root/exam/nmap_scans/$ip/detailed-scan.xml >> /root/exam/nmap_scans/$ip/detailed_searchsploit-results.xml
   printf "\n"
-  cat /root/exam/nmap_scans/$ip/detailed_searchsploit-results.xml
-  printf "\n"
   firefox /root/exam/nmap_scans/$ip/detailed-scan-report.html
   sleep 5;
+  
   next_host
 done
 
@@ -214,34 +154,6 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 5;
 
   printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE} Nmap HTTP Shellshock NSE scan over port 80 for $ip...${RESET}\n"
-  printf "This will check if the host is vulnerable over /cgi-bin/admin.cgi\n"
-  printf "\n"
-  # checks if any if cgi-bin is accessible
-  curl -i http://$ip/cgi-bin/
-  printf "\n"
-  #output to confirm if vulnable pages are accessible
-  curl -i http://$ip/cgi-bin/admin.cgi
-  printf "\n"
-  curl -i http://$ip/cgi-bin/test.cgi
-  printf "\n"
-  curl -i http://$ip/cgi-bin/status
-  printf "\n"
-  #confirm if admin.cgi is accessible and vulnerable
-  nmap -vv -p 80,8080,8000 --script=http-shellshock --script-args uri=/cgi-bin/admin.cgi \
-  -oX /root/exam/nmap_scans/$ip/http_shellshock80.xml $ip && xsltproc /root/exam/nmap_scans/$ip/http_shellshock80.xml \
-  -o /root/exam/nmap_scans/$ip/http_shellshock80_report.html
-  sleep 5;
-
-  printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE} Who owns the services running on $ip ? if ident is running..${RESET}\n"
-  printf "\n"
-  nmap -sV -vv -sC -p 113 \
-  -oX /root/exam/nmap_scans/$ip/service_owners.xml $ip && xsltproc /root/exam/nmap_scans/$ip/service_owners.xml \
-  -o /root/exam/nmap_scans/$ip/service_owners_report_$ip.html
-  sleep 5; 
-
-  printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap SMB NSE scan over port 139 and 445 for $ip...${RESET}\n"
   printf "\n"
   nmap -sS -Pn -vv -p 139,445 --script=smb-enum-domains,smb-os-discovery,smb-enum-shares,smb-enum-users,smb-enum-sessions,smb-enum-groups,smb-enum-processes,smb-server-stats,smb-system-info,smbv2-enabled \
@@ -282,16 +194,14 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   sleep 5;
 
     printf "Now to output all NSE scans for $ip to firefox!\n"
-    firefox /root/exam/nmap_scans/$ip/service_owners_report_$ip.html
     firefox /root/exam/nmap_scans/$ip/ftp_port21_report_$ip.html
     firefox /root/exam/nmap_scans/$ip/dns_nse_report_$ip.html
-    sleep 2;
     firefox /root/exam/nmap_scans/$ip/http_port80_report.html
-    firefox /root/exam/nmap_scans/$ip/nfs_port111_report.html
-    firefox /root/exam/nmap_scans/$ip/http_shellshock80_report.html
-    firefox /root/exam/nmap_scans/$ip/smb_nse_report.html
     sleep 2;
+    firefox /root/exam/nmap_scans/$ip/nfs_port111_report.html
+    firefox /root/exam/nmap_scans/$ip/smb_nse_report.html
     firefox /root/exam/nmap_scans/$ip/smb_nse_vuln_report.html
+    sleep 2;
     firefox /root/exam/nmap_scans/$ip/snmp_nse_report.html
     firefox /root/exam/nmap_scans/$ip/https_nse_report.html
     firefox /root/exam/nmap_scans/$ip/mysql_nse_report.html

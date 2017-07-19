@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# requires list of addresses in /root/exam/nmap_scans/iplist.txt
+
   # Colours
   ESC="\e["
   RESET=$ESC"39m"
@@ -8,7 +10,7 @@
   BLUE=$ESC"34m"
   YELLOW=$ESC"33m"
 
-  function enumeraton_scan {
+function enumeration_scan {
   echo ""
   echo "               w----------------------------------------------------------------w"
   echo "               |                                                                |"
@@ -18,7 +20,7 @@
   echo ""
 }
 
-  function next_host {
+function next_host {
   printf "\n"
   printf "*************************************************"
   printf "       ${GREEN}Starting next host!${RESET}       "
@@ -26,7 +28,9 @@
   printf "\n"
 }
 
-for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
+enumeration_scan
+
+for ip in $(cat /root/exam/nmap_scans/iplist2.txt); do
   mkdir -p /root/exam/nmap_scans/$ip/
 
   printf "\n"
@@ -68,7 +72,7 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Gobuster scripts $ip... on port 80..${RESET}\n"
   printf "Starting gobuster script with common.txt wordlist against http://$ip/\n"
-  gobuster -v -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e \
+  gobuster -u http://$ip -w /root/wordlists/common.txt -s '200,204,301,302,307,403,500' -e \
   >> /root/exam/nmap_scans/$ip/gobuster-common_wordlist.txt
   printf "Completed!\n"
   printf "Remember to check any subdirectories ;)\n"
@@ -86,9 +90,17 @@ for ip in $(cat /root/exam/nmap_scans/iplist.txt); do
   ident-user-enum $ip 22 53 111 113 512 513 514 515 \
   >> /root/exam/nmap_scans/$ip/ident_scan.html
   printf "Completed!\n"
-  sleep 5;  
+  sleep 5;
+
+  printf "\n"
+  printf "${RED}[+]${RESET} ${BLUE}Reverse dnsrecon lookup for $ip... on port 53..${RESET}\n"
+  dnsrecon.py -r $ip  \
+  >> /root/exam/nmap_scans/$ip/reversedns_scan.html
+  printf "Completed!\n"
+  sleep 5;
+
   next_host
 
-printf "All results located at /root/exam/IP_Address/"
+printf "All results located at /root/exam/IP_Address/\n"
 done
 exit
