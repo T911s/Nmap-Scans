@@ -33,11 +33,11 @@ function next_host {
 
 function tcp_all_ports {
   echo ""
-  echo "            ***********************************************************************"
-  echo "            |                                                                     |"
-  echo "            |               Now starting a TCP all ports/UDP scan!                |"
-  echo "            |                                                                     |"
-  echo "            ***********************************************************************"
+  echo "            *********************************************************************"
+  echo "            |                                                                   |"
+  echo "            |               Now starting a TCP all ports scan!                  |"
+  echo "            |                                                                   |"
+  echo "            *********************************************************************"
   echo ""
 }
 
@@ -55,16 +55,8 @@ mkdir -p /root/exam/hosts/$ip/nmap_scans/
   -o /root/exam/hosts/$ip/nmap_scans/allports-scan-report.html
   sleep 2;
 
-  printf "\n"
-  printf "${RED}[+]${RESET} ${BLUE}UDP nmap scan for $ip...${RESET}\n"
-  printf "\n"
-  nmap -sU -vv -Pn --stats-every 3m --max-retries 1 -oX /root/exam/hosts/$ip/nmap_scans/udp-scan.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/udp-scan.xml \
-  -o /root/exam/hosts/$ip/nmap_scans/udp-scan-report.html
-
-  sleep 2;
   /usr/bin/firefox &
   firefox /root/exam/hosts/$ip/nmap_scans/allports-scan-report.html
-  firefox /root/exam/hosts/$ip/nmap_scans/udp-scan-report.html
 
   next_host
 done
@@ -93,7 +85,7 @@ printf "\n"
   printf "\n"
   # printf "View results with #cat searchsploit-results.xml\n"
   sleep 2;
-  searchsploit -v --nmap /root/exam/hosts/$ip/nmap_scans/detailed-scan.xml >> /root/exam/hosts/$ip/nmap_scans/detailed_searchsploit-results.xml
+  searchsploit --nmap /root/exam/hosts/$ip/nmap_scans/detailed-scan.xml >> /root/exam/hosts/$ip/nmap_scans/detailed_searchsploit-results.xml
   printf "\n"
   firefox /root/exam/hosts/$ip/nmap_scans/detailed-scan-report.html
   sleep 5;
