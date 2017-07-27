@@ -122,7 +122,7 @@ for ip in $(cat /root/exam/oscp_tools/iplist2.txt); do
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Reverse dnsrecon lookup for $ip... on port 53..${RESET}\n"
-  dnsrecon.py -r $ip  \
+  dnsrecon -r $ip  \
   >> /root/exam/hosts/$ip/enumeration/reversedns_scan.txt
   cat /root/exam/hosts/$ip/enumeration/reversedns_scan.txt
   printf "Completed!\n"

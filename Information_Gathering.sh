@@ -79,13 +79,15 @@ printf "\n"
   printf "\n"
   nmap -vv -sV -sC -Pn --reason --version-all -T4 -p- -A -oX /root/exam/hosts/$ip/nmap_scans/detailed-scan.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/detailed-scan.xml \
   -o /root/exam/hosts/$ip/nmap_scans/detailed-scan-report.html
+
+
   printf "\n"
-  printf "Now running searchsploit over results\n"
-  printf "Please advise this is not 100 percent and manual testings are preferred, due to nmap output\n"
+  printf "${RED}[+]${RESET} ${BLUE}Now running searchsploit over results...${RESET}\n"
+  printf "**Please advise this is not 100 percent and manual testings are preferred, due to nmap output**\n"
   printf "\n"
-  # printf "View results with #cat searchsploit-results.xml\n"
   sleep 2;
-  searchsploit --nmap /root/exam/hosts/$ip/nmap_scans/detailed-scan.xml >> /root/exam/hosts/$ip/nmap_scans/detailed_searchsploit-results.xml
+  searchsploit -v --nmap /root/exam/hosts/$ip/nmap_scans/detailed-scan.xml >> /root/exam/hosts/$ip/nmap_scans/detailed_searchsploit-results.xml
+
   printf "\n"
   firefox /root/exam/hosts/$ip/nmap_scans/detailed-scan-report.html
   sleep 5;
