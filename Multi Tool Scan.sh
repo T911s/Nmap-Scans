@@ -108,7 +108,6 @@ for ip in $(cat /root/exam/oscp_tools/iplist2.txt); do
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Nikto for $ip... on port 80..${RESET}\n"
   nikto -c all v -h http://$ip -Format xml -output /root/exam/hosts/$ip/enumeration/nikto_scan.xml
-  cat /root/exam/hosts/$ip/enumeration/nikto_scan.xml
   printf "Completed!\n"
   sleep 3;
 
