@@ -1,5 +1,14 @@
 #!/bin/bash
-# requires list of addresses in /root/exam/nmap_scans/iplist.txt
+#
+# t911's sn@ke information gathering script was used in the OSCP
+# It was designed to enumerate fast while gathering as much information as possible then outputs to html and opens firefox .
+#
+# Note: It will only do a TCP ssscan, if you want a UDP ssscan, run the other ssscaner..
+# 
+# It requires manually inputting the target IP address/es in /root/sn@ke/iplist.txt
+# 
+# I am not responsible for this script being run on networks without approved authorization
+# Use your head. Be smart about where you run this script.
 
   # Colours
   ESC="\e["
@@ -13,8 +22,8 @@ function enumeration_scan {
   echo ""
   echo "               w----------------------------------------------------------------w"
   echo "               |                                                                |"
-  echo "               |                Nmap Infomation Gathering Scan                  |"
-  echo "               |                                                         -t911  |"
+  echo "               |             sn@ke Information Gathering Scanner                |"
+  echo "               |                       ----------()<                     -t911  |"
   echo "               w----------------------------------------------------------------w"
   echo ""
 }
@@ -45,18 +54,18 @@ function tcp_all_ports {
 
 # Identify all tcp ports running on the ip addresses in the list.
 
-for ip in $(cat /root/exam/oscp_tools/iplist.txt); do
-mkdir -p /root/exam/hosts/$ip/nmap_scans/
+for ip in $(cat /root/sn@ke/iplist.txt); do
+mkdir -p /root/sn@ke/hosts/$ip/nmap_scans/
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}TCP all ports nmap scan for $ip...${RESET}\n"
   printf "\n"
-  nmap -vv -sV -Pn -T4 -p- -oX /root/exam/hosts/$ip/nmap_scans/allports-scan.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/allports-scan.xml \
-  -o /root/exam/hosts/$ip/nmap_scans/allports-scan-report.html
+  nmap -vv -sV -Pn -T4 -p- -oX /root/sn@ke/hosts/$ip/nmap_scans/allports-scan.xml $ip && xsltproc /root/sn@ke/hosts/$ip/nmap_scans/allports-scan.xml \
+  -o /root/sn@ke/hosts/$ip/nmap_scans/allports-scan-report.html
   sleep 2;
 
   /usr/bin/firefox &
-  firefox /root/exam/hosts/$ip/nmap_scans/allports-scan-report.html
+  firefox /root/sn@ke/hosts/$ip/nmap_scans/allports-scan-report.html
 
   next_host
 done
@@ -72,13 +81,13 @@ done
   echo "                 ************************************************************************"
   echo ""
 
-for ip in $(cat /root/exam/oscp_tools/iplist.txt); do
+for ip in $(cat /root/sn@ke/iplist.txt); do
 
 printf "\n"
   printf "${RED}[+]${RESET} ${BLUE}Detailed TCP nmap scan for $ip...${RESET}\n"
   printf "\n"
-  nmap -vv -sV -sC -Pn --reason --version-all -T4 -p- -A -oX /root/exam/hosts/$ip/nmap_scans/detailed-scan.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/detailed-scan.xml \
-  -o /root/exam/hosts/$ip/nmap_scans/detailed-scan-report.html
+  nmap -vv -sV -sC -Pn --reason --version-all -T4 -p- -A -oX /root/sn@ke/hosts/$ip/nmap_scans/detailed-scan.xml $ip && xsltproc /root/sn@ke/hosts/$ip/nmap_scans/detailed-scan.xml \
+  -o /root/sn@ke/hosts/$ip/nmap_scans/detailed-scan-report.html
 
 
   printf "\n"
@@ -86,11 +95,11 @@ printf "\n"
   printf "**Please advise this is not 100 percent and manual testings are preferred, due to nmap output**\n"
   printf "\n"
   sleep 2;
-  searchsploit -v --nmap /root/exam/hosts/$ip/nmap_scans/detailed-scan.xml >> /root/exam/hosts/$ip/nmap_scans/detailed_searchsploit-results.xml
-  cat /root/exam/hosts/$ip/nmap_scans/detailed_searchsploit-results.xml
+  searchsploit -v --nmap /root/sn@ke/hosts/$ip/nmap_scans/detailed-scan.xml >> /root/sn@ke/hosts/$ip/nmap_scans/detailed_searchsploit-results.xml
+  cat /root/sn@ke/hosts/$ip/nmap_scans/detailed_searchsploit-results.xml
 
   printf "\n"
-  firefox /root/exam/hosts/$ip/nmap_scans/detailed-scan-report.html
+  firefox /root/sn@ke/hosts/$ip/nmap_scans/detailed-scan-report.html
   sleep 5;
 
   next_host
@@ -106,14 +115,14 @@ done
 
 # Run a NSE Scan for all IP addresses in iplist.txt and output to firefox
 
-for ip in $(cat /root/exam/oscp_tools/iplist.txt); do
+for ip in $(cat /root/sn@ke/iplist.txt); do
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap FTP NSE scan over port 21 for $ip...${RESET}\n"
   printf "\n"
   nmap -vv -Pn -p 21 --script=ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221 \
-  -oX /root/exam/hosts/$ip/nmap_scans/ftp_port21.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/ftp_port21.xml \
-  -o /root/exam/hosts/$ip/nmap_scans/ftp_port21_report_$ip.html
+  -oX /root/sn@ke/hosts/$ip/nmap_scans/ftp_port21.xml $ip && xsltproc /root/sn@ke/hosts/$ip/nmap_scans/ftp_port21.xml \
+  -o /root/sn@ke/hosts/$ip/nmap_scans/ftp_port21_report_$ip.html
   sleep 2;
 
 # I havent added nmap nse script for port 22
@@ -123,16 +132,16 @@ printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap SMTP NSE scan over port 25 for $ip...${RESET}\n"
   printf "\n"
   nmap -vv -p 25 --script=smtp-commands,smtp-enum-users,smtp-open-relay,smtp-vuln-cve2010-4344,smtp-vuln-cve2011-1720,smtp-vuln-cve2011-1764 \
-  -oX /root/exam/hosts/$ip/nmap_scans/smtp_nse.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/smtp_nse.xml \
-  -o /root/exam/hosts/$ip/nmap_scans/smtp_nse_report.html
+  -oX /root/sn@ke/hosts/$ip/nmap_scans/smtp_nse.xml $ip && xsltproc /root/sn@ke/hosts/$ip/nmap_scans/smtp_nse.xml \
+  -o /root/sn@ke/hosts/$ip/nmap_scans/smtp_nse_report.html
   sleep 2;2
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap HTTP NSE scan over port 80 for $ip...${RESET}\n"
   printf "\n"
   nmap -vv -Pn -p 80,8080,8000 --script=http-auth-finder,http-comments-displayer,http-config-backup,http-method-tamper,http-passwd,http-default-accounts,http-robots.txt,http-enum,http-exif-spider,http-fileupload-exploiter,http-php-version,http-sql-injection,http-userdir-enum \
-  -oX /root/exam/hosts/$ip/nmap_scans/http_port80.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/http_port80.xml \
-  -o /root/exam/hosts/$ip/nmap_scans/http_port80_report.html
+  -oX /root/sn@ke/hosts/$ip/nmap_scans/http_port80.xml $ip && xsltproc /root/sn@ke/hosts/$ip/nmap_scans/http_port80.xml \
+  -o /root/sn@ke/hosts/$ip/nmap_scans/http_port80_report.html
   sleep 2;
 
 # not scanning for pop3
@@ -142,66 +151,66 @@ printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap NFS NSE scan over port 111 for $ip...${RESET}\n"
   printf "\n"
   nmap -vv -Pn -p 111 --script=nfs-ls,nfs-showmount,nfs-statfs \
-  -oX /root/exam/hosts/$ip/nmap_scans/nfs_port111.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/nfs_port111.xml \
-  -o /root/exam/hosts/$ip/nmap_scans/nfs_port111_report.html
+  -oX /root/sn@ke/hosts/$ip/nmap_scans/nfs_port111.xml $ip && xsltproc /root/sn@ke/hosts/$ip/nmap_scans/nfs_port111.xml \
+  -o /root/sn@ke/hosts/$ip/nmap_scans/nfs_port111_report.html
   sleep 2;
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap SMB NSE scan over port 139 and 445 for $ip...${RESET}\n"
   printf "\n"
   nmap -Pn -vv -p 139,445 --script=smb-enum-domains,smb-os-discovery,smb-enum-shares,smb-enum-users,smb-enum-sessions,smb-enum-groups,smb-enum-processes,smb-server-stats,smb-system-info,smbv2-enabled \
-  -oX /root/exam/hosts/$ip/nmap_scans/smb_nse.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/smb_nse.xml \
-  -o /root/exam/hosts/$ip/nmap_scans/smb_nse_report.html
+  -oX /root/sn@ke/hosts/$ip/nmap_scans/smb_nse.xml $ip && xsltproc /root/sn@ke/hosts/$ip/nmap_scans/smb_nse.xml \
+  -o /root/sn@ke/hosts/$ip/nmap_scans/smb_nse_report.html
   sleep 2;
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap SMB_Vulns NSE scan over port 139 and 445 for $ip...${RESET}\n"
   printf "\n"
   nmap -vv -p 139,445 --script-args=unsafe=1 --script=smb-vuln-conficker,smb-vuln-cve2009-3103,smb-vuln-ms06-025,smb-vuln-ms07-029,smb-vuln-ms08-067,smb-vuln-ms10-054,smb-vuln-ms10-061,smb-vuln-regsvc-dos \
-  -oX /root/exam/hosts/$ip/nmap_scans/smb_nse_vuln.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/smb_nse_vuln.xml \
-  -o /root/exam/hosts/$ip/nmap_scans/smb_nse_vuln_report.html
+  -oX /root/sn@ke/hosts/$ip/nmap_scans/smb_nse_vuln.xml $ip && xsltproc /root/sn@ke/hosts/$ip/nmap_scans/smb_nse_vuln.xml \
+  -o /root/sn@ke/hosts/$ip/nmap_scans/smb_nse_vuln_report.html
   sleep 2;
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap SNMP NSE scan over port 161 for $ip...${RESET}\n"
   printf "\n"
   nmap -vv -p 161 --script=snmp-info,snmp-netstat,snmp-processes,snmp-sysdescr,snmp-win32-services,snmp-win32-shares,snmp-win32-software,snmp-win32-users \
-  -oX /root/exam/hosts/$ip/nmap_scans/snmp_nse.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/snmp_nse.xml \
-  -o /root/exam/hosts/$ip/nmap_scans/snmp_nse_report.html
+  -oX /root/sn@ke/hosts/$ip/nmap_scans/snmp_nse.xml $ip && xsltproc /root/sn@ke/hosts/$ip/nmap_scans/snmp_nse.xml \
+  -o /root/sn@ke/hosts/$ip/nmap_scans/snmp_nse_report.html
   sleep 2;
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap HTTPS NSE scan over port 443 for $ip...${RESET}\n"
   printf "\n"
   nmap -vv -p 443 --script-args vulns.showall --script=ssl-heartbleed,ssl-poodle,ssl-dh-params \
-  -oX /root/exam/hosts/$ip/nmap_scans/https_nse.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/https_nse.xml \
-  -o /root/exam/hosts/$ip/nmap_scans/https_nse_report.html
+  -oX /root/sn@ke/hosts/$ip/nmap_scans/https_nse.xml $ip && xsltproc /root/sn@ke/hosts/$ip/nmap_scans/https_nse.xml \
+  -o /root/sn@ke/hosts/$ip/nmap_scans/https_nse_report.html
   sleep 2;
 
   printf "\n"
   printf "${RED}[+]${RESET} ${BLUE} Nmap MySQL NSE scan over port 3306 for $ip...${RESET}\n"
   printf "\n"
   nmap -vv -p 445,1433,3306 --script=ms-sql-info,mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122 \
-  -oX /root/exam/hosts/$ip/nmap_scans/mysql_nse.xml $ip && xsltproc /root/exam/hosts/$ip/nmap_scans/mysql_nse.xml \
-  -o /root/exam/hosts/$ip/nmap_scans/mysql_nse_report.html
+  -oX /root/sn@ke/hosts/$ip/nmap_scans/mysql_nse.xml $ip && xsltproc /root/sn@ke/hosts/$ip/nmap_scans/mysql_nse.xml \
+  -o /root/sn@ke/hosts/$ip/nmap_scans/mysql_nse_report.html
   sleep 2;
 
 printf "Now to output all NSE scans for $ip to firefox!\n"
-    firefox /root/exam/hosts/$ip/nmap_scans/ftp_port21_report_$ip.html
-    firefox /root/exam/hosts/$ip/nmap_scans/http_port80_report.html
+    firefox /root/sn@ke/hosts/$ip/nmap_scans/ftp_port21_report_$ip.html
+    firefox /root/sn@ke/hosts/$ip/nmap_scans/http_port80_report.html
     sleep 2;
-    firefox /root/exam/hosts/$ip/nmap_scans/nfs_port111_report.html
-    firefox /root/exam/hosts/$ip/nmap_scans/smb_nse_report.html
-    firefox /root/exam/hosts/$ip/nmap_scans/smb_nse_vuln_report.html
+    firefox /root/sn@ke/hosts/$ip/nmap_scans/nfs_port111_report.html
+    firefox /root/sn@ke/hosts/$ip/nmap_scans/smb_nse_report.html
+    firefox /root/sn@ke/hosts/$ip/nmap_scans/smb_nse_vuln_report.html
     sleep 2;
-    firefox /root/exam/hosts/$ip/nmap_scans/snmp_nse_report.html
-    firefox /root/exam/hosts/$ip/nmap_scans/https_nse_report.html
-    firefox /root/exam/hosts/$ip/nmap_scans/mysql_nse_report.html
+    firefox /root/sn@ke/hosts/$ip/nmap_scans/snmp_nse_report.html
+    firefox /root/sn@ke/hosts/$ip/nmap_scans/https_nse_report.html
+    firefox /root/sn@ke/hosts/$ip/nmap_scans/mysql_nse_report.html
     sleep 2;
 done
 
 printf "${RED}[+]${RESET} Scans completed\n"
-printf "${RED}[+]${RESET} Results saved to /root/exam/nmap_scans/'IP_ADDRESS'\n"
+printf "${RED}[+]${RESET} Results saved to /root/sn@ke/nmap_scans/'IP_ADDRESS'\n"
 printf "${RED}[+]${RESET} For more port information, follow: 0daySecurity Enumeration\n"
 
 exit
